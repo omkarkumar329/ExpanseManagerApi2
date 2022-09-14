@@ -13,6 +13,7 @@ public class UserModel {
 	
 	@NotBlank(message = "Please enter name")
 	private String name;
+	
 	@NotNull(message = "Please enter email")
 	@Email(message = "Please enter valid email")
 	@Column(unique= true)

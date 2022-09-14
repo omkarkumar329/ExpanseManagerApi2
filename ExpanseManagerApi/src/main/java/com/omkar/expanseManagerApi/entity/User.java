@@ -34,7 +34,7 @@ public class User{
 	private String name;
 	
 	@Column(unique=true)
-	private String Email;
+	private String email;
 	@JsonIgnore
 	private String password;
 	private Long age;

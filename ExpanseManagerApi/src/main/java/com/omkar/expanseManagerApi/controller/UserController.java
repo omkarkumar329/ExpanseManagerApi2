@@ -8,6 +8,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -16,9 +20,11 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.omkar.expanseManagerApi.entity.AuthModel;
 import com.omkar.expanseManagerApi.entity.User;
 import com.omkar.expanseManagerApi.entity.UserModel;
 import com.omkar.expanseManagerApi.service.UserService;
+
 
 @RestController
 public class UserController {
@@ -26,9 +32,22 @@ public class UserController {
 	@Autowired
 	private UserService userService;
 
+	@Autowired
+	AuthenticationManager authenticationManager;
+	
+	@PostMapping("/login")
+	public ResponseEntity<HttpStatus> login(@RequestBody AuthModel authModel) {
+		System.out.println("Inside Login");
+		Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authModel.getEmail(), authModel.getPassword()));
+		System.out.println("inside login 2");
+		SecurityContextHolder.getContext().setAuthentication(authentication);
+		System.out.println("inside login 3");
+		return new ResponseEntity<HttpStatus>(HttpStatus.OK);
+	}
+	
 	@PostMapping("/register")
-	public ResponseEntity<User> Save(@Valid @RequestBody UserModel user) {
-
+	public ResponseEntity<User> save(@Valid @RequestBody UserModel user) {
+		System.out.println("inside Save in controller");
 		return new ResponseEntity<User>(userService.createUser(user), HttpStatus.CREATED);
 	}
 
