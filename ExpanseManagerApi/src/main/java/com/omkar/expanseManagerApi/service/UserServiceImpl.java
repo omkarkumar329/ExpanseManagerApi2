@@ -4,6 +4,9 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -21,51 +24,60 @@ public class UserServiceImpl implements UserService {
 	@Autowired
 	private PasswordEncoder bcryptEncoder;
 	
+	
 
 	@Override
 	public User createUser(UserModel uModel) {
-		//User user = new User();
-		System.out.println("inside create user in Create user 1");
 		if (userRepository.existsByEmail(uModel.getEmail())) {
-			
-			System.out.println("inside create user in Create user 2");
-			throw new ItemAlreadyExistsException("User is already register with email:"+uModel.getEmail());
+			throw new ItemAlreadyExistsException("User is already register with email:" + uModel.getEmail());
 		}
 		User newUser = new User();
 		BeanUtils.copyProperties(uModel, newUser);
 		newUser.setPassword(bcryptEncoder.encode(newUser.getPassword()));
-		//System.out.println("inside create user in Create user 3");
 		return userRepository.save(newUser);
 	}
 
 	@Override
-	public User readUser(Long id) {
-		return userRepository.findById(id)
-				.orElseThrow(() -> new ResourceNotFoundException("User not found for the id:" + id));
+	public User readUser() {
+		return userRepository.findById(getLoggedInUser().getId())
+				.orElseThrow(() -> new ResourceNotFoundException("User not found for the id:" + getLoggedInUser().getId()));
 	}
 
 	@Override
-	public User updateUser(UserModel user, Long id) {
-		User existingUser = readUser(id);
+	public User updateUser(UserModel user) {
+	//	Long id = userService.getLoggedInUser().getId();
+		User existingUser = readUser();
 		existingUser.setName(user.getName() != null ? user.getName() : existingUser.getName());
 		existingUser.setEmail(user.getEmail() != null ? user.getEmail() : existingUser.getEmail());
-		//existingUser.setPassword(user.getPassword() != null ? user.getPassword() : existingUser.getPassword());
-		existingUser.setPassword(user.getPassword() != null ? bcryptEncoder.encode(user.getPassword()) : existingUser.getPassword());
+		// existingUser.setPassword(user.getPassword() != null ? user.getPassword() :
+		// existingUser.getPassword());
+		existingUser.setPassword(
+				user.getPassword() != null ? bcryptEncoder.encode(user.getPassword()) : existingUser.getPassword());
 		existingUser.setAge(user.getAge() != null ? user.getAge() : existingUser.getAge());
 		return userRepository.save(existingUser);
 	}
 
 	@Override
-	public void deleteUser(Long id) {
-		User existingUser = readUser(id);
+	public void deleteUser() {
+		User existingUser = readUser();
 		userRepository.delete(existingUser);
 	}
 
 	@Override
 	public Page<User> getAllUser(Pageable page) {
 		// TODO Auto-generated method stub
-		
+
 		return userRepository.findAll(page);
+	}
+
+	@Override
+	public User getLoggedInUser() {
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+		String email = authentication.getName();
+		return userRepository.findByEmail(email)
+				.orElseThrow(() -> new UsernameNotFoundException("User Not found for the email " + email));
+
 	}
 
 }
