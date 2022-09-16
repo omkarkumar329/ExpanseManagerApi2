@@ -12,6 +12,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -26,6 +27,7 @@ import com.omkar.expanseManagerApi.entity.UserModel;
 import com.omkar.expanseManagerApi.service.UserService;
 
 
+
 @RestController
 public class UserController {
 
@@ -35,40 +37,50 @@ public class UserController {
 	@Autowired
 	AuthenticationManager authenticationManager;
 	
+	@Autowired
+	UserDetailsService userDetailsService;
+	
+	
+
+	// This is login work
 	@PostMapping("/login")
-	public ResponseEntity<HttpStatus> login(@RequestBody AuthModel authModel) {
-		System.out.println("Inside Login");
-		Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authModel.getEmail(), authModel.getPassword()));
-		System.out.println("inside login 2");
+	public ResponseEntity<HttpStatus> login(@RequestBody AuthModel authModel) throws Exception {
+	Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authModel.getEmail(), authModel.getPassword()));
+		
 		SecurityContextHolder.getContext().setAuthentication(authentication);
-		System.out.println("inside login 3");
 		return new ResponseEntity<HttpStatus>(HttpStatus.OK);
 	}
+
 	
+
+
+
+
+	// This is the end of login controller
 	@PostMapping("/register")
 	public ResponseEntity<User> save(@Valid @RequestBody UserModel user) {
 		System.out.println("inside Save in controller");
 		return new ResponseEntity<User>(userService.createUser(user), HttpStatus.CREATED);
 	}
 
-	@GetMapping("/users/{id}")
-	public ResponseEntity<User> readUser(@PathVariable Long id) {
-		return new ResponseEntity<User>(userService.readUser(id), HttpStatus.OK);
+	@GetMapping("/readprofile")
+	public ResponseEntity<User> readUser() {
+		return new ResponseEntity<User>(userService.readUser(), HttpStatus.OK);
 	}
-	
-	@GetMapping("/users")
+
+	@GetMapping("/fetchAllprofile")
 	public List<User> getAllUser(Pageable page) {
 		return userService.getAllUser(page).toList();
 	}
 
-	@PutMapping("/users/{id}")
+	@PutMapping("/updateprofile")
 	public ResponseEntity<User> updateUser(@RequestBody UserModel user, @PathVariable Long id) {
-		return new ResponseEntity<User>(userService.updateUser(user, id), HttpStatus.OK);
+		return new ResponseEntity<User>(userService.updateUser(user), HttpStatus.OK);
 	}
 
-	@DeleteMapping("/users/{id}")
+	@DeleteMapping("/deletprofile")
 	public ResponseEntity<HttpStatus> deleteUser(@PathVariable Long id) {
-		userService.deleteUser(id);
+		userService.deleteUser();
 		return new ResponseEntity<HttpStatus>(HttpStatus.NO_CONTENT);
 	}
 
